@@ -182,6 +182,9 @@
                 <li class="nav-item">
                     <a class="nav-link rounded px-3" href="#" onclick="showSection('add-reservation', this)"><i class="fa-solid fa-plus-circle me-1"></i> New Reservation</a>
                 </li>
+                <li class="nav-item d-none" id="nav-manage-staff">
+                    <a class="nav-link rounded px-3" href="#" onclick="showSection('manage-staff', this)"><i class="fa-solid fa-user-tie me-1"></i> Manage Staff</a>
+                </li>
             </ul>
             <a href="login?action=logout" class="btn btn-logout d-flex align-items-center gap-2">
                 <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -214,6 +217,7 @@
                     <th>Room Type</th>
                     <th>Check-in</th>
                     <th>Check-out</th>
+                    <th class="added-by-col d-none">Added By</th>
                     <th class="text-center">Actions</th>
                 </tr>
                 </thead>
@@ -299,6 +303,63 @@
             </div>
         </form>
     </div>
+
+    <!-- Manage Staff Section (Admin Only) -->
+    <div id="manage-staff-section" class="section-part content-card d-none">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <h3 class="section-title mb-0 border-0"><i class="fa-solid fa-user-shield text-warning"></i> Manage Staff</h3>
+            <button class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                <i class="fa-solid fa-user-plus me-1"></i> Add New Staff
+            </button>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Temporary Password</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="staff-tbody">
+                <!-- Staff Data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="staffModalTitle"><i class="fa-solid fa-user-plus me-2 text-primary"></i>Add Staff Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="users" method="POST" id="staff-form">
+                <div class="modal-body">
+                    <input type="hidden" name="action" id="staff-action" value="add">
+                    <input type="hidden" name="id" id="staff-id" value="0">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" id="staff-username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="text" class="form-control" name="password" id="staff-password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script src="js/validations.js"></script>
@@ -328,9 +389,19 @@
             loadReservations();
             document.getElementById('form-action').value = 'add';
             document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-file-pen text-success"></i> New Reservation';
-            document.getElementById('reservation-form').reset();
             document.getElementById('error-message').classList.add('d-none');
             document.getElementById('contact-error').classList.add('d-none');
+        } else if (sectionId === 'add-reservation') {
+            // Reset form for a fresh add
+            document.getElementById('reservation-form').reset();
+            document.getElementById('form-action').value = 'add';
+            document.getElementById('resNo').value = '0';
+            document.getElementById('guestId').value = '0';
+            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-file-pen text-success"></i> New Reservation';
+            document.getElementById('error-message').classList.add('d-none');
+            document.getElementById('contact-error').classList.add('d-none');
+        } else if (sectionId === 'manage-staff') {
+            loadStaff();
         }
     }
 
@@ -360,6 +431,7 @@
                             <td><span class="badge text-bg-info text-white"><i class="fa-solid fa-bed me-1"></i> ${r.roomType}</span></td>
                             <td>${r.checkIn}</td>
                             <td>${r.checkOut}</td>
+                            <td class="added-by-col d-none bg-light fw-bold text-center text-secondary">${r.addedByUsername}</td>
                             <td class="text-center">
                                 <button class="btn btn-primary btn-action" onclick='editReservation(${JSON.stringify(r).replace(/'/g, "&apos;")})' title="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
@@ -374,6 +446,8 @@
                         </tr>
                     `;
                 });
+                
+                checkRoleAndAdjustUI(); // Show added_by col if admin
             })
             .catch(err => {
                 console.error('Error loading reservations:', err);
@@ -398,8 +472,77 @@
         showSection('add-reservation', document.querySelectorAll('.nav-link')[1]);
     }
 
+    // Role checking
+    let currentUserRole = 'staff';
+    function fetchUserRole() {
+        fetch('users?action=session-role')
+            .then(res => res.json())
+            .then(data => {
+                currentUserRole = data.role;
+                if (data.role === 'admin') {
+                    document.getElementById('nav-manage-staff').classList.remove('d-none');
+                    document.querySelector('.hero-content h1').innerText = `Welcome Admin: ${data.username}`;
+                } else {
+                    document.querySelector('.hero-content h1').innerText = `Welcome Staff: ${data.username}`;
+                }
+                checkRoleAndAdjustUI();
+            })
+            .catch(err => console.error(err));
+    }
+
+    function checkRoleAndAdjustUI() {
+        if (currentUserRole === 'admin') {
+            document.querySelectorAll('.added-by-col').forEach(el => el.classList.remove('d-none'));
+        }
+    }
+
+    function loadStaff() {
+        const tbody = document.getElementById('staff-tbody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading staff...</td></tr>';
+        
+        fetch('users?action=list')
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No staff members found.</td></tr>';
+                    return;
+                }
+                data.forEach(u => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td class="fw-bold">${u.username}</td>
+                            <td><span class="text-muted"><code>${u.password}</code></span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-primary" onclick="editStaff(${u.id}, '${u.username}', '${u.password}')" data-bs-toggle="modal" data-bs-target="#addStaffModal">Edit</button>
+                                <a href="users?action=delete&id=${u.id}" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Delete staff ${u.username}?')">Delete</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function editStaff(id, username, password) {
+        document.getElementById('staffModalTitle').innerHTML = '<i class="fa-solid fa-user-pen me-2 text-primary"></i>Edit Staff Member';
+        document.getElementById('staff-action').value = 'update';
+        document.getElementById('staff-id').value = id;
+        document.getElementById('staff-username').value = username;
+        document.getElementById('staff-password').value = password;
+    }
+
+    // Reset modal on close
+    document.getElementById('addStaffModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('staffModalTitle').innerHTML = '<i class="fa-solid fa-user-plus me-2 text-primary"></i>Add Staff Member';
+        document.getElementById('staff-form').reset();
+        document.getElementById('staff-action').value = 'add';
+        document.getElementById('staff-id').value = '0';
+    });
+
     // Initial load
     document.addEventListener('DOMContentLoaded', () => {
+        fetchUserRole();
         loadReservations();
     });
 </script>
