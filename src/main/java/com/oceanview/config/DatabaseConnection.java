@@ -7,9 +7,21 @@ import java.sql.SQLException;
 public class DatabaseConnection {
     private static DatabaseConnection instance;
 
-    private static final String URL = "jdbc:mysql://localhost:3306/ocean_view_resort";
-    private static final String USER = "root"; // Update as needed
-    private static final String PASSWORD = "admin123"; // Update as needed
+    private static String getEnv(String name, String defaultValue) {
+        String value = System.getenv(name);
+        return (value != null && !value.trim().isEmpty()) ? value : defaultValue;
+    }
+
+    private static String buildDbUrl() {
+        String host = getEnv("MYSQLHOST", "localhost");
+        String port = getEnv("MYSQLPORT", "3306");
+        String dbName = getEnv("MYSQLDATABASE", "ocean_view_resort");
+        return "jdbc:mysql://" + host + ":" + port + "/" + dbName;
+    }
+
+    private static final String URL = buildDbUrl();
+    private static final String USER = getEnv("MYSQLUSER", "root");
+    private static final String PASSWORD = getEnv("MYSQLPASSWORD", "admin123");
 
     private DatabaseConnection() {
         try {
