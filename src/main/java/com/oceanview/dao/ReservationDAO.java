@@ -26,6 +26,23 @@ public class ReservationDAO {
         return false;
     }
 
+    public boolean registerUser(String username, String password, String role) {
+        String query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement pst = conn.prepareStatement(query)) {
+
+            pst.setString(1, username);
+            pst.setString(2, password);
+            pst.setString(3, role);
+            return pst.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            // e.g. Duplicate entry for username
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public int addGuest(Guest guest) {
         String query = "INSERT INTO guests (name, address, contact) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getInstance().getConnection();
