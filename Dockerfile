@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Create the runtime environment with Tomcat
-FROM tomcat:9.0-jdk11-openjdk-slim
+FROM tomcat:9.0.83-jdk11
 
 # Remove default ROOT application to deploy ours at the root path (/)
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
