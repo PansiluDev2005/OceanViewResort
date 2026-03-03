@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Default admin user
 INSERT INTO
     users (username, password, role)
-VALUES ('admin', 'admin123', 'admin');
+VALUES ('admin2', 'admin123', 'admin');
 
 CREATE TABLE IF NOT EXISTS guests (
     guest_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,5 +28,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
     room_rate DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE
+    added_by INT,
+    FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE,
+    FOREIGN KEY (added_by) REFERENCES users (id) ON DELETE SET NULL
 );

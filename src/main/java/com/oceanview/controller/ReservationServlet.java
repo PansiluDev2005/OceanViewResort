@@ -3,6 +3,7 @@ package com.oceanview.controller;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.model.Guest;
 import com.oceanview.model.Reservation;
+import com.oceanview.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -36,6 +37,10 @@ public class ReservationServlet extends HttpServlet {
             Date checkOut = Date.valueOf(request.getParameter("checkOut"));
             double roomRate = Double.parseDouble(request.getParameter("roomRate"));
 
+            // Get logged-in user from session
+            User loggedInUser = (User) session.getAttribute("user");
+            int addedBy = loggedInUser.getId();
+
             if (checkOut.before(checkIn) || checkOut.equals(checkIn)) {
                 response.sendRedirect("dashboard.html?error=invalid_dates");
                 return;
@@ -45,7 +50,7 @@ public class ReservationServlet extends HttpServlet {
             int guestId = dao.addGuest(guest);
 
             if (guestId != -1) {
-                Reservation res = new Reservation(0, guestId, roomType, checkIn, checkOut, roomRate);
+                Reservation res = new Reservation(0, guestId, roomType, checkIn, checkOut, roomRate, addedBy);
                 dao.addReservation(res);
             }
             response.sendRedirect("dashboard.html");
@@ -66,7 +71,7 @@ public class ReservationServlet extends HttpServlet {
             }
 
             Guest guest = new Guest(guestId, name, address, contact);
-            Reservation res = new Reservation(resNo, guestId, roomType, checkIn, checkOut, roomRate);
+            Reservation res = new Reservation(resNo, guestId, roomType, checkIn, checkOut, roomRate, 0);
 
             dao.updateReservation(res, guest);
             response.sendRedirect("dashboard.html");
@@ -98,7 +103,9 @@ public class ReservationServlet extends HttpServlet {
                         .append("\"checkIn\":\"").append(r.getCheckIn().toString()).append("\",")
                         .append("\"checkOut\":\"").append(r.getCheckOut().toString()).append("\",")
                         .append("\"roomRate\":").append(r.getRoomRate()).append(",")
-                        .append("\"guestId\":").append(r.getGuestId())
+                        .append("\"guestId\":").append(r.getGuestId()).append(",")
+                        .append("\"addedByUsername\":\"")
+                        .append(r.getAddedByUsername() != null ? r.getAddedByUsername() : "Unknown").append("\"")
                         .append("},");
             }
             if (json.length() > 1) {

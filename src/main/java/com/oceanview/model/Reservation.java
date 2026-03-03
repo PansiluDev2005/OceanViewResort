@@ -9,19 +9,23 @@ public class Reservation {
     private Date checkIn;
     private Date checkOut;
     private double roomRate;
+    private int addedBy;
+    private String addedByUsername;
 
     private Guest guest;
 
     public Reservation() {
     }
 
-    public Reservation(int resNo, int guestId, String roomType, Date checkIn, Date checkOut, double roomRate) {
+    public Reservation(int resNo, int guestId, String roomType, Date checkIn, Date checkOut, double roomRate,
+            int addedBy) {
         this.resNo = resNo;
         this.guestId = guestId;
         this.roomType = roomType;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.roomRate = roomRate;
+        this.addedBy = addedBy;
     }
 
     public int getResNo() {
@@ -78,5 +82,21 @@ public class Reservation {
 
     public void setGuest(Guest guest) {
         this.guest = guest;
+    }
+
+    public int getAddedBy() {
+        return addedBy;
+    }
+
+    public void setAddedBy(int addedBy) {
+        this.addedBy = addedBy;
+    }
+
+    public String getAddedByUsername() {
+        return addedByUsername;
+    }
+
+    public void setAddedByUsername(String addedByUsername) {
+        this.addedByUsername = addedByUsername;
     }
 }

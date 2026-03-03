@@ -1,6 +1,7 @@
 package com.oceanview.controller;
 
 import com.oceanview.dao.ReservationDAO;
+import com.oceanview.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -19,9 +20,11 @@ public class LoginServlet extends HttpServlet {
         String user = request.getParameter("username");
         String pass = request.getParameter("password");
 
-        if (dao.validateUser(user, pass)) {
+        User authenticatedUser = dao.validateUser(user, pass);
+        if (authenticatedUser != null) {
             HttpSession session = request.getSession();
-            session.setAttribute("user", user);
+            // Store the whole User object to easily access ID and Role later
+            session.setAttribute("user", authenticatedUser);
             response.sendRedirect("dashboard.html");
         } else {
             response.sendRedirect("index.html?error=1");

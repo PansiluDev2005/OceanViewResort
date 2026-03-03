@@ -129,6 +129,44 @@ public class ReservationDAO {
         return list;
     }
 
+    public Reservation getReservationById(int resNo) {
+        String query = "SELECT r.*, g.name, g.address, g.contact, u.username as added_by_username " +
+                "FROM reservations r " +
+                "JOIN guests g ON r.guest_id = g.guest_id " +
+                "LEFT JOIN users u ON r.added_by = u.id " +
+                "WHERE r.res_no = ?";
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+                PreparedStatement pst = conn.prepareStatement(query)) {
+
+            pst.setInt(1, resNo);
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+                Reservation res = new Reservation();
+                res.setResNo(rs.getInt("res_no"));
+                res.setGuestId(rs.getInt("guest_id"));
+                res.setRoomType(rs.getString("room_type"));
+                res.setCheckIn(rs.getDate("check_in"));
+                res.setCheckOut(rs.getDate("check_out"));
+                res.setRoomRate(rs.getDouble("room_rate"));
+                res.setAddedBy(rs.getInt("added_by"));
+                res.setAddedByUsername(rs.getString("added_by_username"));
+
+                Guest guest = new Guest();
+                guest.setGuestId(rs.getInt("guest_id"));
+                guest.setName(rs.getString("name"));
+                guest.setAddress(rs.getString("address"));
+                guest.setContact(rs.getString("contact"));
+
+                res.setGuest(guest);
+                return res;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean updateReservation(Reservation res, Guest guest) {
         String updateGuest = "UPDATE guests SET name=?, address=?, contact=? WHERE guest_id=?";
         String updateRes = "UPDATE reservations SET room_type=?, check_in=?, check_out=?, room_rate=? WHERE res_no=?";
