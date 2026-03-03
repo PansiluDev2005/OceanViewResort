@@ -63,6 +63,16 @@
                             <cargo.servlet.port>8080</cargo.servlet.port>
                         </properties>
                     </configuration>
+                    <deployables>
+                        <deployable>
+                            <groupId>com.oceanview</groupId>
+                            <artifactId>ocean-view-resort</artifactId>
+                            <type>war</type>
+                            <properties>
+                                <context>/</context>
+                            </properties>
+                        </deployable>
+                    </deployables>
                 </configuration>
             </plugin>
         </plugins>
