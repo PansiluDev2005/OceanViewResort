@@ -13,20 +13,15 @@ public class DatabaseConnection {
     }
 
     private static String buildDbUrl() {
-        String host = getEnv("MYSQLHOST", "localhost");
+        String host = getEnv("MYSQLHOST", "mysql.railway.internal");
         String port = getEnv("MYSQLPORT", "3306");
-        String dbName = getEnv("MYSQLDATABASE", "ocean_view_resort");
-        // Railway's SQL proxy creates a default 'railway' db, but our script creates
-        // 'ocean_view_resort'
-        if ("railway".equals(dbName)) {
-            dbName = "ocean_view_resort";
-        }
+        String dbName = getEnv("MYSQLDATABASE", "railway");
         return "jdbc:mysql://" + host + ":" + port + "/" + dbName;
     }
 
     private static final String URL = buildDbUrl();
     private static final String USER = getEnv("MYSQLUSER", "root");
-    private static final String PASSWORD = getEnv("MYSQLPASSWORD", "admin123");
+    private static final String PASSWORD = getEnv("MYSQLPASSWORD", "ocGsnPQLTzPMmOQpJuXrCLSoLXxsLjYC");
 
     private DatabaseConnection() {
         try {
